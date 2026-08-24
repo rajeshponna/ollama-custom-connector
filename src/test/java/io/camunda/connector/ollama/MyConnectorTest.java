@@ -1,11 +1,15 @@
 package io.camunda.connector.ollama;
 
 import io.camunda.connector.ollama.model.OllamaConnectorResult;
+import io.camunda.connector.runtime.core.outbound.operation.ConnectorOperations;
+import io.camunda.connector.runtime.core.outbound.operation.OutboundConnectorOperationFunction;
 import io.camunda.connector.runtime.test.outbound.OutboundConnectorContextBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+import io.camunda.connector.validation.impl.DefaultValidationProvider;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,13 +21,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OllamaConnectorTest {
 
   private MockWebServer mockServer;
-  private OllamaConnectorFunction connector;
+  private OutboundConnectorOperationFunction connectorFunction;
 
   @BeforeEach
   void setUp() throws Exception {
     mockServer = new MockWebServer();
     mockServer.start();
-    connector = new OllamaConnectorFunction();
+
+    OllamaConnectorFunction connector = new OllamaConnectorFunction();
+
+    // Build the operation function — same way the runtime invokes the connector
+    connectorFunction = new OutboundConnectorOperationFunction(
+            ConnectorOperations.from(connector, new ObjectMapper(), new DefaultValidationProvider())
+    );
   }
 
   @AfterEach
@@ -33,7 +43,6 @@ class OllamaConnectorTest {
 
   @Test
   void shouldCallOllamaAndReturnText() throws Exception {
-    // Mock Ollama response
     mockServer.enqueue(new MockResponse()
             .setBody("""
                     {
@@ -56,9 +65,11 @@ class OllamaConnectorTest {
                     "responseFormat", "text",
                     "timeoutSeconds", 30
             ))
+            // tells the runtime which @Operation method to call
+            .header("operation", "chat")
             .build();
 
-    OllamaConnectorResult result = connector.execute(context);
+    OllamaConnectorResult result = (OllamaConnectorResult) connectorFunction.execute(context);
 
     assertThat(result).isNotNull();
     assertThat(result.getResponseText()).isEqualTo("Hello!");
@@ -90,9 +101,10 @@ class OllamaConnectorTest {
                     "responseFormat", "json",
                     "timeoutSeconds", 30
             ))
+            .header("operation", "chat")
             .build();
 
-    OllamaConnectorResult result = connector.execute(context);
+    OllamaConnectorResult result = (OllamaConnectorResult) connectorFunction.execute(context);
 
     assertThat(result.getDecision()).isNotNull();
     assertThat(result.getDecision()).containsKey("action");

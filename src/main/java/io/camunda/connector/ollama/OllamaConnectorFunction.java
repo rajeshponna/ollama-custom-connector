@@ -1,11 +1,11 @@
-package io.camunda.example;
+package io.camunda.connector.ollama;
 
+import io.camunda.connector.api.annotation.Operation;
 import io.camunda.connector.api.annotation.OutboundConnector;
 import io.camunda.connector.api.outbound.OutboundConnectorContext;
 import io.camunda.connector.api.outbound.OutboundConnectorFunction;
-import io.camunda.connector.generator.java.annotation.ElementTemplate;
-import io.camunda.example.model.OllamaConnectorRequest;
-import io.camunda.example.model.OllamaConnectorResult;
+import io.camunda.connector.ollama.model.OllamaConnectorRequest;
+import io.camunda.connector.ollama.model.OllamaConnectorResult;
 import okhttp3.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,26 +24,19 @@ import java.util.concurrent.TimeUnit;
         },
         type = "io.camunda:ollama-chat:1"
 )
-@ElementTemplate(
-        id = "io.camunda.connectors.OllamaChat.v1",
-        name = "Ollama Chat",
-        version = 1,
-        description = "Call a local or remote Ollama model and use its response to drive process decisions.",
-        icon = "icon.svg",
-        documentationRef = "https://docs.ollama.com/api",
-        inputDataClass = OllamaConnectorRequest.class
-)
 public class OllamaConnectorFunction implements OutboundConnectorFunction {
 
   private static final Logger log = LoggerFactory.getLogger(OllamaConnectorFunction.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
-  public OllamaConnectorResult execute(OutboundConnectorContext context) throws Exception {
+  @Operation(id = "chat")
+  public Object execute(OutboundConnectorContext context) throws Exception {
 
     OllamaConnectorRequest request = context.bindVariables(OllamaConnectorRequest.class);
 
-    log.info("Ollama connector | model={} | format={}", request.getModel(), request.getResponseFormat());
+    log.info("Ollama connector | model={} | format={}",
+            request.getModel(), request.getResponseFormat());
 
     OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
@@ -68,7 +61,7 @@ public class OllamaConnectorFunction implements OutboundConnectorFunction {
     }
 
     String bodyJson = MAPPER.writeValueAsString(bodyMap);
-    String url = request.getBaseUrl().stripTrailing() + "/api/chat";
+    String url = request.getBaseUrl().stripTrailing().replaceAll("/+$", "") + "/api/chat";
 
     Request httpRequest = new Request.Builder()
             .url(url)
@@ -97,10 +90,10 @@ public class OllamaConnectorFunction implements OutboundConnectorFunction {
         try {
           Map<String, Object> parsed = MAPPER.readValue(
                   content,
-                  MAPPER.getTypeFactory().constructMapType(Map.class, String.class, Object.class)
+                  MAPPER.getTypeFactory().constructMapType(
+                          Map.class, String.class, Object.class)
           );
           result.setDecision(parsed);
-          log.info("Ollama JSON decision: {}", parsed);
         } catch (Exception e) {
           log.warn("Could not parse JSON from Ollama: {}", content);
           result.setDecision(Map.of("raw", content));

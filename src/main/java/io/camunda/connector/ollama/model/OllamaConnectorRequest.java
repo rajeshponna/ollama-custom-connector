@@ -1,4 +1,4 @@
-package io.camunda.example.model;
+package io.camunda.connector.ollama.model;
 
 import io.camunda.connector.generator.java.annotation.TemplateProperty;
 import io.camunda.connector.generator.java.annotation.TemplateProperty.PropertyType;

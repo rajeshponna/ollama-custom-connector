@@ -1,4 +1,4 @@
-package io.camunda.example.model;
+package io.camunda.connector.ollama.model;
 
 
 
