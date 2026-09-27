@@ -1,8 +1,14 @@
 # Camunda + Local AI with Ollama
 
+This connector has grown into the Unified Local AI Connector, which supports Ollama, vLLM, and any OpenAI-compatible engine from one Camunda 8 connector. New features and engines are added there.
+
+This project grew out of the [Ollama Custom Connector](https://github.com/rajeshponna/ollama-custom-connector).
+
 A custom outbound connector that lets **Camunda 8 Self-Managed** workflows call **locally running, open-weight AI models** through **Ollama** — no cloud AI API, no per-request billing, full data control.
 
 ![Camunda + Ollama overview](src/main/resources/images/slide-01.jpg)
+
+
 
 ---
 
