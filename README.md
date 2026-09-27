@@ -1,6 +1,6 @@
 # Camunda + Local AI with Ollama
 
-This connector has grown into the Unified Local AI Connector, which supports Ollama, vLLM, and any OpenAI-compatible engine from one Camunda 8 connector. New features and engines are added there. [Unified Local Ai Connector](https://github.com/rajeshponna/ollama-custom-connector).
+This connector has grown into the [Unified Local AI Connector](https://github.com/rajeshponna/unified-local-ai-connector), which supports Ollama, vLLM, and any OpenAI-compatible engine from one Camunda 8 connector. New features and engines are added there. 
 
 
 
